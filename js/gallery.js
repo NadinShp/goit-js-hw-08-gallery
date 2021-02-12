@@ -1,7 +1,7 @@
 import items from "./gallery-items.js";
 // Создание и рендер разметки по массиву данных и предоставленному шаблону.
 
-// Ссылка на оригинальное изображение должна храниться в data-атрибуте source на 
+// Ссылка на оригинальное изображение должна храниться в data-атрибуте source на
 // элементе img, и указываться в href ссылки(это необходимо для доступности).
 /* <li class="gallery__item">
   <a
@@ -33,6 +33,7 @@ const createGalleryCard = item => {
     galleryImage.setAttribute("src", item.preview);
     galleryImage.setAttribute("data-source", item.original);
     galleryImage.setAttribute("alt", item.description);
+    galleryImage.setAttribute("index", item.index);
 
     galleryLink.appendChild(galleryImage);
     galleryItem.appendChild(galleryLink);
@@ -51,15 +52,39 @@ lightboxOverleyRef.addEventListener("click", pressbackdroplHandler);
 function clickImageHandler(event) {
     event.preventDefault();
     if (event.target.nodeName !== "IMG") return;
-    const linkOriginalImg = event.target.dataset.source;
-    setOriginalImageHandler(linkOriginalImg);
-    openModalHendler();
+  const linkOriginalImg = event.target.dataset.source;
+  const currentIndex = event.target.attributes.index.nodeValue;
+  setOriginalImageHandler(linkOriginalImg);
+  setIndexHendler(currentIndex);
+  openModalHendler();
 };
 function setOriginalImageHandler(url) {
   originalImgRef.src = url;
 }
+function setIndexHendler(url) {
+  originalImgRef.dataset.index = url;
+}
+function pressArray(event) {
+  console.log("press array");
+  const activeIndex = Number(originalImgRef.dataset.index);
+  if (event.key === "ArrowLeft") {
+    if (activeIndex > 0) {
+      const previousImgSourse = items[activeIndex - 1].original;
+      originalImgRef.src = previousImgSourse;
+      originalImgRef.dataset.index = activeIndex - 1;
+    }
+  }
+  if (event.key === "ArrowRight") {
+    if (activeIndex < items.length - 1) {
+      const nextImgSourse = items[activeIndex + 1].original;
+      originalImgRef.src = nextImgSourse;
+      originalImgRef.dataset.index = activeIndex + 1;
+    }
+  }
+};
 function openModalHendler() {
   lightboxRef.classList.add("is-open");
+  window.addEventListener("keydown", pressArray);
   window.addEventListener("keydown", pressEscHandler);
 }
 // Закрытие модального окна по клику на кнопку button[data-action="close-lightbox"].
@@ -67,6 +92,8 @@ function openModalHendler() {
 // чтобы при следующем открытии модального окна, пока грузится изображение, мы не видели предыдущее.
 function closeModalHandler() {
   deleteLinkImg();
+  deleteIndex();
+  window.removeEventListener("keydown", pressArray);
   window.removeEventListener("keydown", pressEscHandler);
   lightboxRef.classList.remove("is-open");
 }
@@ -81,4 +108,7 @@ function pressbackdroplHandler(event) {
 }
 function deleteLinkImg() {
   originalImgRef.src = '';
+}
+function deleteIndex() {
+  originalImgRef.dataset.index = '';
 }
